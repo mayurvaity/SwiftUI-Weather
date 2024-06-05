@@ -8,15 +8,20 @@
 import SwiftUI
 
 struct ContentView: View {
+    
+    //to keep night or day value
+    //in swiftUI, states gets created and destroyed all the time, but this state property gets stored somewhere else to preserve its value
+    @State private var isNight = false
+    
     var body: some View {
         ZStack {
             //to set background gradient (color)
-            BackgroundView(topColor: .blue, bottomColor: Color("lightBlue"))
+            BackgroundView(isNight: isNight)
             
             VStack {
                 CityTextView(cityName: "Cupertino, CA")
                 
-                MainWeatherStatusView(imageName: "cloud.sun.fill",
+                MainWeatherStatusView(imageName: isNight ? "moon.stars.fill" : "cloud.sun.fill",
                                       temperature: 76)
                 
                 //spacing - to add space between each weather day view
@@ -51,10 +56,11 @@ struct ContentView: View {
                 Button {
                     //this block to contain action when button is pressed
                     print("tapped")
+                    isNight.toggle()
                 } label: {
                     WeatherButton(title: "Change Day Time",
-                                  textColor: .blue,
-                                  backgroundColor: .white)
+                                  textColor: .white,
+                                  backgroundColor: .mint)
                 }
                 
                 Spacer()
@@ -83,9 +89,11 @@ struct WeatherDayView: View {
                 .font(.system(size: 16, weight: .medium, design: .default))
                 .foregroundColor(.white)
             
+            //symbolRenderingMode - for accessing rendering modes made by SF symbol 3+
             Image(systemName: imageName)
-                .renderingMode(.original)
+                .symbolRenderingMode(.multicolor)
                 .resizable()
+//                .foregroundStyle(.pink, .orange, .green)
                 .aspectRatio(contentMode: .fit)
                 .frame(width: 40, height: 40)
             
@@ -97,8 +105,8 @@ struct WeatherDayView: View {
 }
 
 struct BackgroundView: View {
-    var topColor: Color
-    var bottomColor: Color
+    
+    var isNight: Bool
     
     var body: some View {
     
@@ -107,10 +115,16 @@ struct BackgroundView: View {
         //startpoint is from top left (where 1st color willb used), endpt is at bottom-right corner (to end with white)
         //edgesIgnoringSafeArea property used to cover all area and not just safe area of the screen
         //to use color from assets, use name string with struct Color
-        LinearGradient(gradient: Gradient(colors: [topColor, bottomColor]),
-                       startPoint: .topLeading,
-                       endPoint: .bottomTrailing)
-        .edgesIgnoringSafeArea(.all)
+//        LinearGradient(gradient: Gradient(colors: [isNight ? .black : .blue, isNight ? .gray : Color("lightBlue")]),
+//                       startPoint: .topLeading,
+//                       endPoint: .bottomTrailing)
+//        .ignoresSafeArea(.all)
+        
+        //another way of implementing gradient - iOS 16+
+        ContainerRelativeShape()
+            .fill(isNight ? Color.black.gradient : Color.blue.gradient)
+            .ignoresSafeArea()
+        
     }
 }
 
@@ -156,19 +170,4 @@ struct MainWeatherStatusView: View {
     }
 }
 
-struct WeatherButton: View {
-    
-    var title: String
-    var textColor: Color
-    var backgroundColor: Color
-    
-    var body: some View {
-        //clipshape - to set cornerradius with value 10
-        Text(title)
-            .frame(width: 280, height: 50)
-            .background(backgroundColor)
-            .foregroundStyle(textColor)
-            .font(.system(size: 20, weight: .bold, design: .default))
-            .clipShape(RoundedRectangle(cornerRadius: 10))
-    }
-}
+
